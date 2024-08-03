@@ -1,9 +1,9 @@
 {
   "$schema": "https://json.schemastore.org/web-manifest-combined.json",
-  "name": "qwik summer",
-  "short_name": "q-b",
+  "name": "qwik-project-name",
+  "short_name": "Welcome to Qwik",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#fff",
-  "description": "Qwik Cityによるアプリケーション構築基盤"
+  "description": "A Qwik project app."
 }
