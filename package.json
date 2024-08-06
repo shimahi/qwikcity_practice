@@ -27,6 +27,9 @@
     "dev": "vite --mode ssr",
     "dev.debug": "node --inspect-brk ./node_modules/vite/bin/vite.js --mode ssr --force",
     "lint": "biome check --write ./src && biome format ./src --write",
+    "preview": "qwik build preview && vite preview --open",
+    "serve": "wrangler pages dev ./dist --compatibility-flags=nodejs_als",
+    "setup": "$npm_execpath run patches/setup.js",
     "start": "vite --open --mode ssr",
     "test": "$npm_execpath test src/services/ && $npm_execpath test src/domains/*.test.ts && $npm_execpath test src/utils/*.test.ts",
     "type": "tsc -p ./tsconfig.json",
@@ -39,14 +42,13 @@
   "devDependencies": {
     "@biomejs/biome": "^1.8.2",
     "@builder.io/qwik": "^1.5.7",
-    "@builder.io/qwik-auth": "0.2.2",
     "@builder.io/qwik-city": "^1.5.7",
-    "@builder.io/vite-plugin-macro": "^0.0.7",
     "@cloudflare/workers-types": "^4.20240620.0",
     "@faker-js/faker": "^8.4.1",
     "@types/node": "^20.12.7",
     "better-sqlite3": "^9.6.0",
     "bun-types": "^1.1.17",
+    "cf-bindings-proxy": "^0.7.1",
     "drizzle-kit": "^0.20.18",
     "fishery": "^2.2.2",
     "lefthook": "^1.6.18",
@@ -55,6 +57,7 @@
     "undici": "*",
     "vite": "^5.2.10",
     "vite-tsconfig-paths": "^4.2.1",
+    "wrangler": "^3.0.0",
     "zx": "^8.1.3"
   }
 }
