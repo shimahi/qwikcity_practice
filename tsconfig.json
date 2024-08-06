@@ -1,25 +1,27 @@
 {
   "compilerOptions": {
-    "allowJs": true,
-    "target": "ES2017",
-    "module": "ES2022",
+    "target": "ESNext",
+    "module": "ESNext",
     "lib": ["es2022", "DOM", "WebWorker", "DOM.Iterable"],
     "jsx": "react-jsx",
     "jsxImportSource": "@builder.io/qwik",
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "moduleResolution": "Bundler",
+    "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "incremental": true,
     "isolatedModules": true,
     "outDir": "tmp",
     "noEmit": true,
+    "types": ["vite/client", "@cloudflare/workers-types", "bun-types"],
+    "baseUrl": ".",
     "paths": {
-      "~/*": ["./src/*"]
+      "@/schemas": ["db/schemas/index.ts"],
+      "@/*": ["src/*"]
     }
   },
-  "files": ["./.eslintrc.cjs"],
-  "include": ["src", "./*.d.ts", "./*.config.ts"]
+  "include": ["src", "./*.d.ts", "./*.config.ts", "db"],
+  "exclude": ["node_modules", "dist", "src/styled-system/"]
 }
