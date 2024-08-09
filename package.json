@@ -38,6 +38,7 @@
     "qwik": "qwik"
   },
   "dependencies": {
+    "@fontsource/kanit": "^5.0.20",
     "cuid": "^3.0.0",
     "drizzle-orm": "^0.29.4"
   },
