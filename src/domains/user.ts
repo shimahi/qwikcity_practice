@@ -14,6 +14,24 @@ export class UserDomain {
   }
 
   /**
+   * ユーザー一覧をページネーションで取得する
+   */
+  paginate({
+    limit = 30,
+    offset = 0,
+  }: Parameters<UserDBService['paginate']>[0] = {}) {
+    return this.userDB.paginate({ limit, offset })
+  }
+
+  /**
+   * IDに一致するユーザーを取得する
+   * @param {string} id
+   */
+  get(id: User['id']) {
+    return this.userDB.get(id)
+  }
+
+  /**
    * 認証プロバイダーのプロファイルIDからユーザーを作成する
    * 既に存在する場合は作成をスキップして、そのユーザーを返す
    * @param {ProfileIds} profileIds 検索したいプロファイルIDのカラム名
@@ -51,6 +69,23 @@ export class UserDomain {
         accountId: `${params.accountId}${cuid().slice(4)}`,
       }),
     )
+  }
+
+  /**
+   * ユーザーを更新する。DBを更新したらKVのログインユーザー情報も更新する
+   * @param {string} id ユーザーID
+   * @param {Partial<User>} inputs 更新したいユーザー情報
+   */
+  async update(id: User['id'], inputs: Partial<User>) {
+    return this.userDB.update(id, inputs).then(async () => {
+      const userKv = await this.kvUser.get()
+      if (!userKv) return
+
+      return this.kvUser.put({
+        ...userKv,
+        ...inputs,
+      })
+    })
   }
 
   /**
