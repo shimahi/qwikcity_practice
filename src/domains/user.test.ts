@@ -39,6 +39,32 @@ afterAll(() => {
  * テストケースの実装
  * =============================
  */
+describe('#paginate', () => {
+  const subject = new UserDomain(requestEventMock)
+  test('引数を指定しない場合、そのままuserDB.paginateがコールされること', async () => {
+    await subject.paginate()
+
+    expect(userDBServiceMock.paginate).toHaveBeenCalled()
+  })
+  test('引数を指定した場合、それに応じてuserDB.paginateがコールされること', async () => {
+    const pageInput = { limit: faker.number.int(), offset: faker.number.int() }
+
+    await subject.paginate(pageInput)
+
+    expect(userDBServiceMock.paginate).toHaveBeenCalledWith(pageInput)
+  })
+})
+
+describe('#get', () => {
+  const subject = new UserDomain(requestEventMock)
+  const userId = faker.string.uuid()
+  test('userDB.getがコールされること', async () => {
+    await subject.get(userId)
+
+    expect(userDBServiceMock.get).toHaveBeenCalledWith(userId)
+  })
+})
+
 describe('#create', () => {
   beforeEach(() => {
     userDBServiceMock.getByGoogleProfileId.mockClear()
@@ -108,6 +134,31 @@ describe('#create', () => {
         updatedAt: expect.any(Date),
       })
       expect(userDBServiceMock.create).toHaveBeenCalledTimes(2)
+    })
+  })
+})
+
+describe('#update', () => {
+  const subject = new UserDomain(requestEventMock)
+  const userId = faker.string.uuid()
+  const userData = userFixture.build()
+  const inputs = {
+    displayName: faker.person.firstName(),
+    bio: faker.lorem.sentence(),
+  }
+
+  beforeEach(() => {
+    userDBServiceMock.update.mockResolvedValue(userData)
+    kvServiceMock.user.get.mockResolvedValue(userData)
+  })
+
+  test('userDB.updateがコールされ、KVのログインユーザー情報が更新されること', async () => {
+    await subject.update(userId, inputs)
+
+    expect(userDBServiceMock.update).toHaveBeenCalledWith(userId, inputs)
+    expect(kvServiceMock.user.put).toHaveBeenCalledWith({
+      ...userData,
+      ...inputs,
     })
   })
 })
