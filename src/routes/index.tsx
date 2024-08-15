@@ -17,8 +17,9 @@ import {
 import { useAuthSignin, useAuthSignout } from './plugin@auth'
 
 export const useLoader = routeLoader$(async (requestEvent) => {
-  const users = []
-  const currentUser = null
+  const userDomain = new UserDomain(requestEvent)
+  const users = await userDomain.paginate()
+  const currentUser = await authorize(requestEvent)
 
   return {
     users,
