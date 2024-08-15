@@ -12,9 +12,46 @@ export default defineConfig({
         '"kanit", "Noto Sans JP", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif',
       whiteSpace: 'normal',
     },
+    'button, a': {
+      '&:hover': {
+        cursor: 'pointer',
+      },
+      '&:disabled': {
+        cursor: 'not-allowed',
+      },
+    },
+    'dialog[role=dialog]': {
+      zIndex: 100,
+    },
   },
   theme: {
     extend: {
+      recipes: {
+        hover: defineRecipe({
+          className: 'defaultHoverAction',
+          description: 'a/button要素をホバーしたときの挙動',
+          base: {
+            '&:hover': {
+              opacity: 0.5,
+              transition: 'opacity 150ms ease-in-out',
+            },
+          },
+        }),
+      },
+      keyframes: {
+        loading: {
+          '0%': { backgroundPosition: '0% 0%' },
+          '100%': { backgroundPosition: '200% 0%' },
+        },
+        slideIn: {
+          from: { transform: 'translateX(100%)' },
+          to: { transform: 'translateX(0)' },
+        },
+        slideOut: {
+          from: { transform: 'translateX(0)' },
+          to: { transform: 'translateX(100%)' },
+        },
+      },
       textStyles: {
         heading: {
           description: 'ページの見出しの文字',
