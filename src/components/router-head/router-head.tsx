@@ -1,12 +1,13 @@
-import { component$ } from "@builder.io/qwik";
-import { useDocumentHead, useLocation } from "@builder.io/qwik-city";
+import { useDocumentHead, useLocation } from '@builder.io/qwik-city'
+
+import { component$ } from '@builder.io/qwik'
 
 /**
  * The RouterHead component is placed inside of the document `<head>` element.
  */
 export const RouterHead = component$(() => {
-  const head = useDocumentHead();
-  const loc = useLocation();
+  const head = useDocumentHead()
+  const loc = useLocation()
 
   return (
     <>
@@ -14,7 +15,10 @@ export const RouterHead = component$(() => {
 
       <link rel="canonical" href={loc.url.href} />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+      <link rel="icon" type="image/png" href="/icon.png" />
+      <link rel="apple-touch-icon" href="/icon.png" />
+      <meta name="apple-mobile-web-app-capable" content="yes" />
+      <link rel="apple-touch-startup-image" href="/splash.png" />
 
       {head.meta.map((m) => (
         <meta key={m.key} {...m} />
@@ -44,5 +48,5 @@ export const RouterHead = component$(() => {
         />
       ))}
     </>
-  );
-});
+  )
+})
