@@ -2,8 +2,10 @@ import { IconButton } from '@/components/ui/IconButton'
 import { SVG } from '@/components/ui/svg'
 import { authorize } from '@/domains/auth'
 import { UserDomain } from '@/domains/user'
+import { useUpload } from '@/hooks/storage'
 import type { User } from '@/schemas'
 import type { AuthUser } from '@/services/kv'
+import { StorageService } from '@/services/storage'
 import { css } from '@/styled-system/css'
 import { container } from '@/styled-system/patterns'
 import { hover } from '@/styled-system/recipes'
@@ -28,6 +30,24 @@ export const useLoader = routeLoader$(async (requestEvent) => {
     currentUser,
   }
 })
+
+export const useSaveImage = routeAction$(
+  async (data, requestEvent) => {
+    const storageService = new StorageService(requestEvent)
+    return await storageService.save({
+      tmpKey: data.tmpKey,
+      object: {
+        name: 'user',
+        field: 'avatar',
+        id: data.userId,
+      },
+    })
+  },
+  zod$({
+    tmpKey: z.string(),
+    userId: z.string(),
+  }),
+)
 
 export const useUpdateUser = routeAction$(
   async (data, requestEvent) => {
@@ -440,19 +460,30 @@ export const MenuContent = component$(
 )
 
 export const ImageUploader = component$(
-  ({ avatarUrl }: { avatarUrl: string; userId: string }) => {
+  ({ avatarUrl, userId }: { avatarUrl: string; userId: string }) => {
     const ref = useSignal<HTMLInputElement>()
     const tmpAvatarUrl = useSignal<string>(avatarUrl)
+    const { tmpKey, upload, reset, loading } = useUpload()
+    const save = useSaveImage()
+    const updateUser = useUpdateUser()
 
     const handleImageClick = $(() => {
       ref.value?.click()
     })
 
-    const handleFileChange = $(async (event: Event) => {})
+    const handleFileChange = $(async (event: Event) => {
+      const input = event.target as HTMLInputElement
+      if (input.files && input.files.length > 0) {
+        const file = input.files[0]
+        upload(file).then(() => {
+          tmpAvatarUrl.value = URL.createObjectURL(file)
+        })
+      }
+    })
 
     return (
       <div>
-        <button onClick$={handleImageClick} class={hover()} disabled={false}>
+        <button onClick$={handleImageClick} class={hover()} disabled={loading}>
           <div
             class={css({
               width: 'auto',
@@ -463,6 +494,24 @@ export const ImageUploader = component$(
               position: 'relative',
             })}
           >
+            {loading && (
+              <div
+                class={css({
+                  zIndex: 1,
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '100%',
+                  background:
+                    'linear-gradient(90deg, #e5e6e6 25%, #d5d5d5 50%, #e5e6e6 75%)',
+                  backgroundSize: '200% 100%',
+                  transform: 'rotate(45deg)',
+                  animation: 'loading 1s infinite',
+                })}
+              />
+            )}
             <img
               src={tmpAvatarUrl.value}
               alt=""
@@ -484,19 +533,73 @@ export const ImageUploader = component$(
           onChange$={handleFileChange}
           class={css({ display: 'none' })}
         />
+
+        {!!tmpKey && !loading && (
+          <div
+            class={css({
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: 3,
+            })}
+          >
+            <IconButton
+              icon={'Close'}
+              color="red"
+              disabled={save.isRunning}
+              onClick$={() => {
+                reset()
+                tmpAvatarUrl.value = avatarUrl
+              }}
+            />
+            <IconButton
+              icon={'Check'}
+              color="teal"
+              disabled={save.isRunning}
+              onClick$={async () => {
+                const newAvatarUrl = await save.submit({
+                  tmpKey,
+                  userId: userId,
+                })
+
+                updateUser.submit({
+                  userId: userId,
+                  inputs: {
+                    avatarUrl: `${newAvatarUrl?.value}`,
+                  },
+                })
+                reset()
+              }}
+            />
+          </div>
+        )}
       </div>
     )
   },
 )
 
 export const DisplayNameForm = component$(
-  ({ displayName }: { displayName: string; userId: string }) => {
+  ({ displayName, userId }: { displayName: string; userId: string }) => {
     const editingDisplayName = useSignal(false)
     const displayNameInput = useSignal(displayName)
-
+    const updateUser = useUpdateUser()
     const inputRef = useSignal<HTMLInputElement>()
 
-    const handleKeyDown = $((event: KeyboardEvent) => {})
+    const handleKeyDown = $((event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        displayNameInput.value = displayName
+        editingDisplayName.value = false
+      } else if (event.key === 'Enter' && !event.isComposing) {
+        event.preventDefault()
+        updateUser.submit({
+          userId,
+          inputs: {
+            displayName: displayNameInput.value,
+          },
+        })
+        editingDisplayName.value = false
+      }
+    })
 
     return (
       <div class={css({ pl: 10 })}>
@@ -576,7 +679,15 @@ export const DisplayNameForm = component$(
                 <IconButton
                   icon="Check"
                   color="teal"
-                  onClick$={async () => {}}
+                  onClick$={async () => {
+                    updateUser.submit({
+                      userId,
+                      inputs: {
+                        displayName: displayNameInput.value,
+                      },
+                    })
+                    editingDisplayName.value = false
+                  }}
                 />
               </div>
             ) : (
@@ -602,12 +713,27 @@ export const DisplayNameForm = component$(
 )
 
 export const AccountIdForm = component$(
-  ({ accountId }: { accountId: string; userId: string }) => {
+  ({ accountId, userId }: { accountId: string; userId: string }) => {
     const editingAccountId = useSignal(false)
     const accountIdInput = useSignal(accountId)
+    const updateUser = useUpdateUser()
     const inputRef = useSignal<HTMLInputElement>()
 
-    const handleKeyDown = $((event: KeyboardEvent) => {})
+    const handleKeyDown = $((event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        accountIdInput.value = accountId
+        editingAccountId.value = false
+      } else if (event.key === 'Enter' && !event.isComposing) {
+        event.preventDefault()
+        updateUser.submit({
+          userId,
+          inputs: {
+            accountId: accountIdInput.value,
+          },
+        })
+        editingAccountId.value = false
+      }
+    })
 
     return (
       <div class={css({ pl: 10 })}>
@@ -687,7 +813,15 @@ export const AccountIdForm = component$(
                 <IconButton
                   icon="Check"
                   color="teal"
-                  onClick$={async () => {}}
+                  onClick$={async () => {
+                    updateUser.submit({
+                      userId,
+                      inputs: {
+                        accountId: accountIdInput.value,
+                      },
+                    })
+                    editingAccountId.value = false
+                  }}
                 />
               </div>
             ) : (
@@ -713,12 +847,36 @@ export const AccountIdForm = component$(
 )
 
 export const BioForm = component$(
-  ({ bio }: { bio: string; userId: string }) => {
+  ({ bio, userId }: { bio: string; userId: string }) => {
     const editingBio = useSignal(false)
     const bioInput = useSignal(bio)
+    const updateUser = useUpdateUser()
     const ref = useSignal<HTMLTextAreaElement>()
 
-    const handleKeyDown = $((event: KeyboardEvent) => {})
+    const handleKeyDown = $((event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        bioInput.value = bio
+        editingBio.value = false
+        // focusを外す
+        ref.value?.blur()
+      }
+      // 日本語入力していない状態で cmd + enter を押したら送信
+      if (
+        event.key === 'Enter' &&
+        (event.metaKey || event.ctrlKey) &&
+        !event.isComposing
+      ) {
+        event.preventDefault()
+        updateUser.submit({
+          userId,
+          inputs: {
+            bio: bioInput.value,
+          },
+        })
+        editingBio.value = false
+        ref.value?.blur()
+      }
+    })
 
     return (
       <div class={css({ width: '100%' })}>
@@ -757,7 +915,19 @@ export const BioForm = component$(
                 bioInput.value = bio
               }}
             />
-            <IconButton icon="Check" color="teal" onClick$={async () => {}} />
+            <IconButton
+              icon="Check"
+              color="teal"
+              onClick$={async () => {
+                updateUser.submit({
+                  userId,
+                  inputs: {
+                    bio: bioInput.value,
+                  },
+                })
+                editingBio.value = false
+              }}
+            />
           </div>
         )}
       </div>
