@@ -1,4 +1,5 @@
 import { IconButton } from '@/components/ui/IconButton'
+import { SVG } from '@/components/ui/svg'
 import { authorize } from '@/domains/auth'
 import { UserDomain } from '@/domains/user'
 import type { User } from '@/schemas'
@@ -14,6 +15,7 @@ import {
   z,
   zod$,
 } from '@builder.io/qwik-city'
+import { Modal } from '@qwik-ui/headless'
 import { useAuthSignin, useAuthSignout } from './plugin@auth'
 
 export const useLoader = routeLoader$(async (requestEvent) => {
@@ -218,6 +220,58 @@ export const Menu = component$(
   ({ currentUser }: { currentUser: AuthUser | null }) => {
     return (
       <>
+        <Modal.Root
+          class={[
+            'Modal-wrapper',
+            css({
+              display: 'block',
+              md: {
+                display: 'none',
+              },
+            }),
+          ]}
+        >
+          <Modal.Trigger
+            class={[
+              'Modal-trigger',
+              css({
+                position: 'fixed',
+                top: 5,
+                right: 5,
+                zIndex: 3,
+              }),
+            ]}
+          >
+            <SVG.Menu color="white" class="menu-button" />
+          </Modal.Trigger>
+          <Modal.Panel>
+            <div
+              class={css({
+                position: 'fixed',
+                top: 0,
+                right: 0,
+                height: '100%',
+                width: '100%',
+                backgroundColor: 'gray.100',
+              })}
+            >
+              <Modal.Close
+                class={[
+                  'modal-Close',
+                  css({
+                    position: 'fixed',
+                    top: 5,
+                    right: 5,
+                    zIndex: 3,
+                  }),
+                ]}
+              >
+                <SVG.Close />
+              </Modal.Close>
+              <MenuContent currentUser={currentUser} />
+            </div>
+          </Modal.Panel>
+        </Modal.Root>
         <div
           class={css({
             paddingTop: '64px',
@@ -409,23 +463,6 @@ export const ImageUploader = component$(
               position: 'relative',
             })}
           >
-            <div
-              class={css({
-                zIndex: 1,
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                borderRadius: '100%',
-                background:
-                  'linear-gradient(90deg, #e5e6e6 25%, #d5d5d5 50%, #e5e6e6 75%)',
-                backgroundSize: '200% 100%',
-                transform: 'rotate(45deg)',
-                animation: 'loading 1s infinite',
-              })}
-            />
-
             <img
               src={tmpAvatarUrl.value}
               alt=""
@@ -447,28 +484,6 @@ export const ImageUploader = component$(
           onChange$={handleFileChange}
           class={css({ display: 'none' })}
         />
-
-        <div
-          class={css({
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: 3,
-          })}
-        >
-          <IconButton
-            icon={'Close'}
-            color="red"
-            disabled={false}
-            onClick$={() => {}}
-          />
-          <IconButton
-            icon={'Check'}
-            color="teal"
-            disabled={false}
-            onClick$={async () => {}}
-          />
-        </div>
       </div>
     )
   },
@@ -478,6 +493,7 @@ export const DisplayNameForm = component$(
   ({ displayName }: { displayName: string; userId: string }) => {
     const editingDisplayName = useSignal(false)
     const displayNameInput = useSignal(displayName)
+
     const inputRef = useSignal<HTMLInputElement>()
 
     const handleKeyDown = $((event: KeyboardEvent) => {})
@@ -586,10 +602,9 @@ export const DisplayNameForm = component$(
 )
 
 export const AccountIdForm = component$(
-  ({ accountId, userId }: { accountId: string; userId: string }) => {
+  ({ accountId }: { accountId: string; userId: string }) => {
     const editingAccountId = useSignal(false)
     const accountIdInput = useSignal(accountId)
-    const updateUser = useUpdateUser()
     const inputRef = useSignal<HTMLInputElement>()
 
     const handleKeyDown = $((event: KeyboardEvent) => {})
@@ -698,10 +713,9 @@ export const AccountIdForm = component$(
 )
 
 export const BioForm = component$(
-  ({ bio, userId }: { bio: string; userId: string }) => {
+  ({ bio }: { bio: string; userId: string }) => {
     const editingBio = useSignal(false)
     const bioInput = useSignal(bio)
-    const updateUser = useUpdateUser()
     const ref = useSignal<HTMLTextAreaElement>()
 
     const handleKeyDown = $((event: KeyboardEvent) => {})
