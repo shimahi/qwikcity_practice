@@ -38,6 +38,8 @@
     "qwik": "qwik"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.540.0",
+    "@aws-sdk/s3-request-presigner": "^3.550.0",
     "@fontsource/kanit": "^5.0.20",
     "cuid": "^3.0.0",
     "drizzle-orm": "^0.29.4"
