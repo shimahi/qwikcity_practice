@@ -1,0 +1,26 @@
+account_id = "f0b6594800de7689a0a7eb90d29c0cb2"
+compatibility_date = "2024-03-15"
+compatibility_flags = [ "nodejs_compat" ]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "qwikcity-db"
+database_id = "c4d34d6a-3d6e-4aa1-939e-a85bee9d2933"
+preview_database_id = "DB"
+migrations_dir = "./db/migrations"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "qwikcity-db_preview"
+database_id = "6c8f55be-b584-4164-bf5d-f6bd0639c90c"
+preview_database_id = "DB"
+migrations_dir = "./db/migrations"
+
+[[kv_namespaces]]
+binding = "KV"
+id = "51ba55222387483bb954508741a9aab7"
+preview_id = "51ba55222387483bb954508741a9aab7"
+
+[[r2_buckets]]
+binding="BUCKET"
+bucket_name="qwikcitybucket"
