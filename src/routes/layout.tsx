@@ -1,4 +1,11 @@
-import { Slot, component$ } from '@builder.io/qwik'
+import { Snackbar } from '@/components/ui/Snackbar'
+import { MessageContext } from '@/hooks/message'
+import {
+  Slot,
+  component$,
+  useContextProvider,
+  useStore,
+} from '@builder.io/qwik'
 import type { RequestHandler } from '@builder.io/qwik-city'
 import '@fontsource/kanit/400.css'
 import '@fontsource/kanit/500.css'
@@ -15,8 +22,15 @@ export const onGet: RequestHandler = async ({ cacheControl }) => {
 }
 
 export default component$(() => {
+  const message = useStore<{
+    content: string | null
+    severity: 'success' | 'error'
+  }>({ content: null, severity: 'success' })
+  useContextProvider(MessageContext, message)
+
   return (
     <>
+      <Snackbar />
       <Slot />
     </>
   )
