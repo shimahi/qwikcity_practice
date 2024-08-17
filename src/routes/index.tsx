@@ -1,7 +1,9 @@
 import { IconButton } from '@/components/ui/IconButton'
+import { Snackbar } from '@/components/ui/Snackbar'
 import { SVG } from '@/components/ui/svg'
 import { authorize } from '@/domains/auth'
 import { UserDomain } from '@/domains/user'
+import { useMessage } from '@/hooks/message'
 import { useUpload } from '@/hooks/storage'
 import type { User } from '@/schemas'
 import type { AuthUser } from '@/services/kv'
@@ -290,6 +292,8 @@ export const Menu = component$(
               </Modal.Close>
               <MenuContent currentUser={currentUser} />
             </div>
+            {/* Qwik UIのモーダルはTop-Layerのため、モーダルを開いた状態でもメッセージが表示されるようにSnackbarを内部にレンダリングする */}
+            <Snackbar />
           </Modal.Panel>
         </Modal.Root>
         <div
@@ -466,6 +470,7 @@ export const ImageUploader = component$(
     const { tmpKey, upload, reset, loading } = useUpload()
     const save = useSaveImage()
     const updateUser = useUpdateUser()
+    const { execute, showMessage } = useMessage()
 
     const handleImageClick = $(() => {
       ref.value?.click()
@@ -475,9 +480,11 @@ export const ImageUploader = component$(
       const input = event.target as HTMLInputElement
       if (input.files && input.files.length > 0) {
         const file = input.files[0]
-        upload(file).then(() => {
-          tmpAvatarUrl.value = URL.createObjectURL(file)
-        })
+        upload(file)
+          .then(() => {
+            tmpAvatarUrl.value = URL.createObjectURL(file)
+          })
+          .catch(showMessage)
       }
     })
 
@@ -562,13 +569,17 @@ export const ImageUploader = component$(
                   userId: userId,
                 })
 
-                updateUser.submit({
-                  userId: userId,
-                  inputs: {
-                    avatarUrl: `${newAvatarUrl?.value}`,
-                  },
+                execute(
+                  updateUser.submit({
+                    userId: userId,
+                    inputs: {
+                      avatarUrl: `${newAvatarUrl?.value}`,
+                    },
+                  }),
+                ).then(() => {
+                  reset()
+                  showMessage('プロフィール画像を更新しました。')
                 })
-                reset()
               }}
             />
           </div>
@@ -584,6 +595,7 @@ export const DisplayNameForm = component$(
     const displayNameInput = useSignal(displayName)
     const updateUser = useUpdateUser()
     const inputRef = useSignal<HTMLInputElement>()
+    const { execute, showMessage } = useMessage()
 
     const handleKeyDown = $((event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -591,13 +603,17 @@ export const DisplayNameForm = component$(
         editingDisplayName.value = false
       } else if (event.key === 'Enter' && !event.isComposing) {
         event.preventDefault()
-        updateUser.submit({
-          userId,
-          inputs: {
-            displayName: displayNameInput.value,
-          },
+        execute(
+          updateUser.submit({
+            userId,
+            inputs: {
+              displayName: displayNameInput.value,
+            },
+          }),
+        ).then(() => {
+          editingDisplayName.value = false
+          showMessage('アカウント名を更新しました。')
         })
-        editingDisplayName.value = false
       }
     })
 
@@ -680,13 +696,17 @@ export const DisplayNameForm = component$(
                   icon="Check"
                   color="teal"
                   onClick$={async () => {
-                    updateUser.submit({
-                      userId,
-                      inputs: {
-                        displayName: displayNameInput.value,
-                      },
+                    await execute(
+                      updateUser.submit({
+                        userId,
+                        inputs: {
+                          displayName: displayNameInput.value,
+                        },
+                      }),
+                    ).then(() => {
+                      editingDisplayName.value = false
+                      showMessage('アカウント名を更新しました。')
                     })
-                    editingDisplayName.value = false
                   }}
                 />
               </div>
@@ -718,6 +738,7 @@ export const AccountIdForm = component$(
     const accountIdInput = useSignal(accountId)
     const updateUser = useUpdateUser()
     const inputRef = useSignal<HTMLInputElement>()
+    const { execute, showMessage } = useMessage()
 
     const handleKeyDown = $((event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -725,13 +746,17 @@ export const AccountIdForm = component$(
         editingAccountId.value = false
       } else if (event.key === 'Enter' && !event.isComposing) {
         event.preventDefault()
-        updateUser.submit({
-          userId,
-          inputs: {
-            accountId: accountIdInput.value,
-          },
+        execute(
+          updateUser.submit({
+            userId,
+            inputs: {
+              accountId: accountIdInput.value,
+            },
+          }),
+        ).then(() => {
+          editingAccountId.value = false
+          showMessage('アカウントIDを更新しました。')
         })
-        editingAccountId.value = false
       }
     })
 
@@ -814,13 +839,17 @@ export const AccountIdForm = component$(
                   icon="Check"
                   color="teal"
                   onClick$={async () => {
-                    updateUser.submit({
-                      userId,
-                      inputs: {
-                        accountId: accountIdInput.value,
-                      },
+                    await execute(
+                      updateUser.submit({
+                        userId,
+                        inputs: {
+                          accountId: accountIdInput.value,
+                        },
+                      }),
+                    ).then(() => {
+                      editingAccountId.value = false
+                      showMessage('アカウントIDを更新しました。')
                     })
-                    editingAccountId.value = false
                   }}
                 />
               </div>
@@ -852,6 +881,7 @@ export const BioForm = component$(
     const bioInput = useSignal(bio)
     const updateUser = useUpdateUser()
     const ref = useSignal<HTMLTextAreaElement>()
+    const { execute, showMessage } = useMessage()
 
     const handleKeyDown = $((event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -867,14 +897,18 @@ export const BioForm = component$(
         !event.isComposing
       ) {
         event.preventDefault()
-        updateUser.submit({
-          userId,
-          inputs: {
-            bio: bioInput.value,
-          },
+        execute(
+          updateUser.submit({
+            userId,
+            inputs: {
+              bio: bioInput.value,
+            },
+          }),
+        ).then(() => {
+          editingBio.value = false
+          showMessage('プロフィールを更新しました。')
+          ref.value?.blur()
         })
-        editingBio.value = false
-        ref.value?.blur()
       }
     })
 
@@ -919,13 +953,17 @@ export const BioForm = component$(
               icon="Check"
               color="teal"
               onClick$={async () => {
-                updateUser.submit({
-                  userId,
-                  inputs: {
-                    bio: bioInput.value,
-                  },
+                await execute(
+                  updateUser.submit({
+                    userId,
+                    inputs: {
+                      bio: bioInput.value,
+                    },
+                  }),
+                ).then(() => {
+                  editingBio.value = false
+                  showMessage('プロフィールを更新しました。')
                 })
-                editingBio.value = false
               }}
             />
           </div>
